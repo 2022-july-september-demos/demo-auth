@@ -55,7 +55,7 @@ describe('users', () => {
     expect(res.status).toEqual(200);
   });
 
-  it.skip('GET api/v1/users should return 401 if user not admin', async () => {
+  it('GET api/v1/users should return 401 if user not admin', async () => {
     const agent = request.agent(app);
     // create a User directly in the database (saves an API call)
     const user = await UserService.create({ ...mockUser });
@@ -69,7 +69,7 @@ describe('users', () => {
     expect(res.status).toEqual(403);
   });
 
-  it.skip('/users should return 200 if user is admin', async () => {
+  it('/users should return 200 if user is admin', async () => {
     const agent = request.agent(app);
 
     // create an admin user
