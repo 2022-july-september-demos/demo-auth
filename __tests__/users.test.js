@@ -28,7 +28,7 @@ const mockUser = {
     });
   });
 
-  it.skip('POST /api/v1/sessions signs in an existing user', async () => {
+  it('POST /api/v1/sessions signs in an existing user', async () => {
     await request(app).post('/api/v1/users').send(mockUser);
     const res = await request(app)
       .post('/api/v1/users/sessions')
