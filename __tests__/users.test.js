@@ -2,22 +2,23 @@ const pool = require('../lib/utils/pool');
 const setup = require('../data/setup');
 const request = require('supertest');
 const app = require('../lib/app');
+const UserService = require('../lib/services/UserService');
 
 describe('users', () => {
   beforeEach(() => {
     return setup(pool);
   });
   // Dummy user for testing
-const mockUser = {
-  firstName: 'Test',
-  lastName: 'User',
-  email: 'test@example.com',
-  password: '12345',
-};
+  const mockUser = {
+    firstName: 'Test',
+    lastName: 'User',
+    email: 'test@example.com',
+    password: '12345',
+  };
 
   it('POST /api/v1/users creates a new user', async () => {
-    const res = await request(app).post('/api/v1/users').send(mockUser)
-    expect(res.status).toBe(200)
+    const res = await request(app).post('/api/v1/users').send(mockUser);
+    expect(res.status).toBe(200);
     const { firstName, lastName, email } = mockUser;
 
     expect(res.body).toEqual({
@@ -36,13 +37,20 @@ const mockUser = {
     expect(res.status).toEqual(200);
   });
 
-  it.skip('/protected should return a 401 if not authenticated', async () => {
+  it('GET api/v1/users/protected should return a 401 if not authenticated', async () => {
     const res = await request(app).get('/api/v1/users/protected');
     expect(res.status).toEqual(401);
   });
 
-  it.skip('/protected should return the current user if authenticated', async () => {
+  it('api/v1/users/protected should return the current user if authenticated', async () => {
     const agent = request.agent(app);
+    // create a User directly in the database (saves an API call)
+    const user = await UserService.create({ ...mockUser });
+    // sign in that user
+
+    await agent
+      .post('/api/v1/users/sessions')
+      .send({ email: 'test@example.com', password: '12345' });
     const res = await agent.get('/api/v1/users/protected');
     expect(res.status).toEqual(200);
   });
@@ -50,10 +58,13 @@ const mockUser = {
   it.skip('GET api/v1/users should return 401 if user not admin', async () => {
     const agent = request.agent(app);
     // create a User directly in the database (saves an API call)
-    const user = await UserService.create({ ...mockUser});
+    const user = await UserService.create({ ...mockUser });
     // sign in that user
-    await (await agent.post('/api/v1/users/sessions')).send({ email: 'test@example.com', password: '12345' });
-    
+
+    await agent
+      .post('/api/v1/users/sessions')
+      .send({ email: 'test@example.com', password: '12345' });
+
     const res = await agent.get('/api/v1/users/');
     expect(res.status).toEqual(403);
   });
@@ -82,10 +93,12 @@ const mockUser = {
   it.skip('DELETE /sessions deletes the user session', async () => {
     const agent = request.agent(app);
     // create a User directly in the database (saves an API call)
-    const user = await UserService.create({ ...mockUser});
+    const user = await UserService.create({ ...mockUser });
     // sign in that user
-    await (await agent.post('/api/v1/users/sessions')).send({ email: 'test@example.com', password: '12345' });
-    
+    await (
+      await agent.post('/api/v1/users/sessions')
+    ).send({ email: 'test@example.com', password: '12345' });
+
     const resp = await agent.delete('/api/v1/users/sessions');
     expect(resp.status).toBe(204);
   });
